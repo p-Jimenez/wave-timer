@@ -6,6 +6,7 @@ import TimerRow from "./components/TimerRow";
 import { ErrorBoundary } from "react-error-boundary";
 import TimerCounter from "./components/TimerCounter";
 import Button from "./components/Button";
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const defaultTimer: Timer = {
   id: crypto.randomUUID(),
@@ -14,6 +15,8 @@ const defaultTimer: Timer = {
   interval: 500,
   beeps: 5,
 }
+
+getCurrentWindow().setAlwaysOnTop(true);
 
 function App() {
 
@@ -66,7 +69,7 @@ function App() {
 
 
   return (
-    <div className="h-screen flex justify-center items-center gap-4">
+    <div className="h-screen flex justify-center items-center gap-4 bg-white dark:bg-gray-900 dark:text-white">
 
       <ErrorBoundary fallback={<span>error </span>}>
         <TimerCounter

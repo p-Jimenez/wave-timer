@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Timer } from "../types";
 import Button from "./Button";
-import { register, unregister, unregisterAll } from "@tauri-apps/plugin-global-shortcut";
+import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
 
 const formatMillis = (millis: number) => {
   const formater = new Intl.NumberFormat('en-US', {
@@ -11,6 +11,9 @@ const formatMillis = (millis: number) => {
 
   return formater.format(millis);
 }
+
+// @ts-ignore
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 const TimerCounter = ({ timer }: { timer: Timer }) => {
   const [currentMillis, setCurrentMillis] = useState(0);
@@ -46,10 +49,25 @@ const TimerCounter = ({ timer }: { timer: Timer }) => {
     }
 
     const delta = time - previousTimeRef.current;
+
     previousTimeRef.current = time;
+
+    const beeps = offsets.map((offset) => {
+      return Array.from({ length: timer.beeps }).map((_, i) => {
+        return parseInt(offset) - timer.interval * i;
+      })
+    }).flat().filter((value, index, array) => array.indexOf(value) === index);
 
     setCurrentMillis(prev => {
       const newMillis = prev + delta;
+
+      for (const b of beeps) {
+        // is between range of 10ms
+        if (newMillis >= b - 15 && newMillis <= b) {
+          console.log('beep');
+          beep();
+        }
+      }
 
       if (newMillis >= offsetValue) {
         handleStop();
@@ -96,6 +114,17 @@ const TimerCounter = ({ timer }: { timer: Timer }) => {
       cancelAnimationFrame(requestRef.current);
     };
   }, []);
+
+  const beep = async (path: string = '/blipSelect.mp3') => {
+
+    const source = audioContext.createBufferSource();
+    const response = await fetch(path);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+    source.start();
+  }
 
   if (currentMillis === undefined) {
     return <div className="text-3xl text-red-500">error</div>;
