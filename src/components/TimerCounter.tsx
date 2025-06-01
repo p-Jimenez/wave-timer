@@ -63,7 +63,7 @@ const TimerCounter = ({ timer }: { timer: Timer }) => {
 
       for (const b of beeps) {
         // is between range of 10ms
-        if (newMillis >= b - 15 && newMillis <= b) {
+        if (newMillis >= b - 10 && newMillis <= b) {
           console.log('beep');
           beep();
         }
@@ -87,8 +87,6 @@ const TimerCounter = ({ timer }: { timer: Timer }) => {
     const init = async () => {
 
       await register('CommandOrControl+Shift+C', (event) => {
-        console.log('Shortcut triggered', event);
-
         if (event.state === 'Released') {
           if (isPlaying) {
 
