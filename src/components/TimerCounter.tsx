@@ -19,6 +19,8 @@ const TimerCounter = ({ timer }: { timer: Timer }) => {
   const [currentMillis, setCurrentMillis] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  const beeps = useRef<number[]>([]);
+
   const requestRef = useRef<number>(0);
   const previousTimeRef = useRef<number>(0);
   const accumulatedTimeRef = useRef<number>(0);
@@ -30,6 +32,12 @@ const TimerCounter = ({ timer }: { timer: Timer }) => {
 
   const handlePlay = () => {
     if (isPlaying) return;
+
+    beeps.current = (offsets.map((offset) => {
+      return Array.from({ length: timer.beeps }).map((_, i) => {
+        return parseInt(offset) - timer.interval * i;
+      })
+    }).flat().filter((value, index, array) => array.indexOf(value) === index))
 
     setIsPlaying(true);
     previousTimeRef.current = performance.now();
@@ -52,21 +60,16 @@ const TimerCounter = ({ timer }: { timer: Timer }) => {
 
     previousTimeRef.current = time;
 
-    const beeps = offsets.map((offset) => {
-      return Array.from({ length: timer.beeps }).map((_, i) => {
-        return parseInt(offset) - timer.interval * i;
-      })
-    }).flat().filter((value, index, array) => array.indexOf(value) === index);
-
     setCurrentMillis(prev => {
       const newMillis = prev + delta;
 
-      for (const b of beeps) {
+      for (const b of beeps.current) {
         // is between range of 10ms
-        if (newMillis >= b - 10 && newMillis <= b) {
-          console.log('beep');
+        if (newMillis >= b - 10 && newMillis <= b + 10) {
           beep();
+          beeps.current = beeps.current.filter(beep => beep !== b);
         }
+
       }
 
       if (newMillis >= offsetValue) {
